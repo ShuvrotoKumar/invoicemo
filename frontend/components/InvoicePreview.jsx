@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Card, Divider, Button, Space } from 'antd';
+import { Card, Button, Space } from 'antd';
 import { DownloadOutlined, PrinterOutlined, SaveOutlined, FileTextOutlined } from '@ant-design/icons';
 
 const InvoicePreview = ({ values, totals, logoUrl, template, onDownloadPDF, onSaveJSON, onPrint, isDarkMode, isSaving }) => {
@@ -66,7 +66,7 @@ const InvoicePreview = ({ values, totals, logoUrl, template, onDownloadPDF, onSa
         </div>
       </div>
 
-      <Divider className="my-6" style={{ borderTop: '2px solid #f1f5f9' }} />
+      <div className="my-6 border-t-2 border-gray-100" />
 
       <div className="mb-10">
         <h3 className="text-xs font-bold text-blue-500 uppercase tracking-widest mb-3">Bill To</h3>
@@ -122,7 +122,7 @@ const InvoicePreview = ({ values, totals, logoUrl, template, onDownloadPDF, onSa
               <span className="font-semibold">-{formatCurrency(totals.discountAmount)}</span>
             </div>
           )}
-          <Divider className="my-2" style={{ borderTop: '2px solid #f1f5f9' }} />
+          <div className="my-2 border-t-2 border-gray-100" />
           <div className="flex justify-between text-xl font-bold text-gray-900 bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-xl">
             <span>Grand Total</span>
             <span className="text-blue-600">{formatCurrency(totals.grandTotal)}</span>
@@ -283,7 +283,7 @@ const InvoicePreview = ({ values, totals, logoUrl, template, onDownloadPDF, onSa
         </Space>
       </div>
       <div className="p-4 bg-gray-100 dark:bg-gray-900 overflow-auto max-h-[calc(100vh-240px)]">
-        <div className="shadow-2xl rounded-lg overflow-hidden">
+        <div id="invoice-content" className="shadow-2xl rounded-lg overflow-hidden">
           {template === 'modern' ? <ModernTemplate /> : <ClassicTemplate />}
         </div>
       </div>

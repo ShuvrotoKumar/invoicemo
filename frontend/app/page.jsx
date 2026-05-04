@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Form, Layout, Typography, Row, Col, Space, InputNumber, Card, ConfigProvider, theme, Switch, Button, Select } from 'antd';
+import dayjs from 'dayjs';
+import { Form, Layout, Typography, Row, Col, Space, InputNumber, Card, ConfigProvider, theme, Switch, Button, Select, message } from 'antd';
 import { SunOutlined, MoonOutlined, DownloadOutlined, FileTextOutlined, SwapOutlined } from '@ant-design/icons';
 import InvoiceForm from '@/components/InvoiceForm';
 import ItemTable from '@/components/ItemTable';
@@ -22,6 +23,7 @@ export default function Home() {
   const [logoUrl, setLogoUrl] = useState(null);
   const [template, setTemplate] = useState('modern');
   const [isSaving, setIsSaving] = useState(false);
+  const [initialInvoiceNumber] = useState(() => `INV-${Math.floor(Math.random() * 9000) + 1000}`);
 
   const onValuesChange = useCallback((_, allValues) => {
     setFormValues(allValues);
@@ -35,6 +37,11 @@ export default function Home() {
     if (savedDraft) {
       try {
         const parsed = JSON.parse(savedDraft);
+        if (parsed.issueDate) parsed.issueDate = dayjs(parsed.issueDate);
+        if (parsed.dueDate) parsed.dueDate = dayjs(parsed.dueDate);
+        if (!parsed.items || parsed.items.length === 0) {
+          parsed.items = [{ name: '', description: '', quantity: 1, unitPrice: 0 }];
+        }
         form.setFieldsValue(parsed);
         setFormValues(parsed);
         if (parsed.template) setTemplate(parsed.template);
@@ -52,16 +59,40 @@ export default function Home() {
     if (!element) return;
     setIsSaving(true);
     try {
-      const canvas = await html2canvas(element, { scale: 2, useCORS: true, logging: false });
-      const imgData = canvas.toDataURL('image/png');
+      const parent = element.parentElement;
+      const originalOverflow = parent.style.overflow;
+      const originalMaxHeight = parent.style.maxHeight;
+      const originalHeight = parent.style.height;
+      parent.style.overflow = 'visible';
+      parent.style.maxHeight = 'none';
+      parent.style.height = element.scrollHeight + 'px';
+      await new Promise(r => setTimeout(r, 100));
+      const canvas = await html2canvas(element, { scale: 2, useCORS: true, logging: false, height: element.scrollHeight });
+      parent.style.overflow = originalOverflow;
+      parent.style.maxHeight = originalMaxHeight;
+      parent.style.height = originalHeight;
       const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgProps = pdf.getImageProperties(imgData);
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const ratio = pdfWidth / canvas.width;
+      const canvasHeightPerPage = pdfHeight / ratio;
+      const pageCount = Math.ceil(canvas.height / canvasHeightPerPage);
+
+      for (let i = 0; i < pageCount; i++) {
+        if (i > 0) pdf.addPage();
+        const srcY = canvasHeightPerPage * i;
+        const srcHeight = Math.min(canvasHeightPerPage, canvas.height - srcY);
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.width = canvas.width;
+        pageCanvas.height = srcHeight;
+        pageCanvas.getContext('2d').drawImage(canvas, 0, srcY, canvas.width, srcHeight, 0, 0, canvas.width, srcHeight);
+        const pageImgData = pageCanvas.toDataURL('image/png');
+        pdf.addImage(pageImgData, 'PNG', 0, 0, pdfWidth, srcHeight * ratio);
+      }
       pdf.save(`invoice_${formValues.invoiceNumber || 'draft'}.pdf`);
     } catch (error) {
       console.error('PDF generation failed:', error);
+      message.error('PDF download failed. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -147,7 +178,7 @@ export default function Home() {
                 layout="vertical"
                 initialValues={{
                   currency: 'USD',
-                  invoiceNumber: `INV-${Math.floor(Math.random() * 9000) + 1000}`,
+                  invoiceNumber: initialInvoiceNumber,
                   items: [{ name: '', description: '', quantity: 1, unitPrice: 0 }],
                   taxRate: 0,
                   discount: 0

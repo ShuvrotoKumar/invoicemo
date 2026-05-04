@@ -7,7 +7,7 @@ import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 const ItemTable = () => {
   return (
     <Card title="Invoice Items" className="shadow-sm rounded-xl mt-6 bg-white dark:bg-gray-800">
-      <Form.List name="items" initialValue={[{ name: '', description: '', quantity: 1, unitPrice: 0 }]}>
+      <Form.List name="items">
         {(fields, { add, remove }) => (
           <>
             <div className="overflow-x-auto">
