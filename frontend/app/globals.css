@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.ant-table {
+  border-radius: 12px !important;
+  overflow: hidden;
+}
+
+.ant-card {
+  border: none !important;
+}
+
+.ant-form-item-label label {
+  font-weight: 500 !important;
+  color: #64748b !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .ant-form-item-label label {
+    color: #9ca3af !important;
+  }
+}
+
+.ant-input, .ant-input-textarea, .ant-select-selector, .ant-picker {
+  border-radius: 8px !important;
+}
+
+.ant-card-head-title {
+  font-weight: 600 !important;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
