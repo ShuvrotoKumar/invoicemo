@@ -2,9 +2,9 @@
 
 import React from 'react';
 import { Card, Button, Space } from 'antd';
-import { DownloadOutlined, PrinterOutlined, SaveOutlined, FileTextOutlined } from '@ant-design/icons';
+import { DownloadOutlined, PrinterOutlined, SaveOutlined, FileTextOutlined, CloudUploadOutlined } from '@ant-design/icons';
 
-const InvoicePreview = ({ values, totals, logoUrl, template, onDownloadPDF, onSaveJSON, onPrint, isDarkMode, isSaving }) => {
+const InvoicePreview = ({ values, totals, logoUrl, template, onDownloadPDF, onSaveJSON, onSaveToAccount, onPrint, isDarkMode, isSaving, isApiSaving }) => {
   const {
     companyName = 'Your Company',
     companyAddress = 'Company Address',
@@ -279,6 +279,7 @@ const InvoicePreview = ({ values, totals, logoUrl, template, onDownloadPDF, onSa
         <Space wrap size="small" className="no-print">
           <Button icon={<PrinterOutlined />} onClick={onPrint} size="small">Print</Button>
           <Button icon={<SaveOutlined />} onClick={onSaveJSON} size="small">Save JSON</Button>
+          <Button icon={<CloudUploadOutlined />} onClick={onSaveToAccount} loading={isApiSaving} size="small">Save to Account</Button>
           <Button type="primary" icon={<DownloadOutlined />} onClick={onDownloadPDF} loading={isSaving} size="small">Download PDF</Button>
         </Space>
       </div>

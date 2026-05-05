@@ -3,11 +3,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import dayjs from 'dayjs';
 import { Form, Layout, Typography, Row, Col, Space, InputNumber, Card, ConfigProvider, theme, Switch, Button, Select, message } from 'antd';
-import { SunOutlined, MoonOutlined, DownloadOutlined, FileTextOutlined, SwapOutlined } from '@ant-design/icons';
+import { SunOutlined, MoonOutlined, DownloadOutlined, FileTextOutlined, SwapOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
 import InvoiceForm from '@/components/InvoiceForm';
 import ItemTable from '@/components/ItemTable';
 import InvoicePreview from '@/components/InvoicePreview';
 import { calculateTotals } from '@/utils/calculateTotals';
+import { useAuth } from '@/context/AuthContext';
+import { invoiceApi } from '@/lib/api';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -17,12 +19,14 @@ const { Option } = Select;
 
 export default function Home() {
   const [form] = Form.useForm();
+  const { user, logout } = useAuth();
   const [formValues, setFormValues] = useState({});
   const [totals, setTotals] = useState({ subtotal: '0.00', taxAmount: '0.00', discountAmount: '0.00', grandTotal: '0.00' });
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [logoUrl, setLogoUrl] = useState(null);
   const [template, setTemplate] = useState('modern');
   const [isSaving, setIsSaving] = useState(false);
+  const [isApiSaving, setIsApiSaving] = useState(false);
   const [initialInvoiceNumber] = useState(() => `INV-${Math.floor(Math.random() * 9000) + 1000}`);
 
   const onValuesChange = useCallback((_, allValues) => {
@@ -98,6 +102,37 @@ export default function Home() {
     }
   };
 
+  const handleSaveToAccount = async () => {
+    if (!user) {
+      message.info('Please log in to save invoices to your account');
+      // Here you could open a login modal
+      return;
+    }
+
+    setIsApiSaving(true);
+    try {
+      const payload = {
+        ...formValues,
+        items: formValues.items.map(item => ({
+          itemName: item.name,
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice
+        })),
+        tax: formValues.taxRate,
+        discount: formValues.discount,
+        companyLogo: logoUrl,
+      };
+      
+      await invoiceApi.create(payload);
+      message.success('Invoice saved to your account!');
+    } catch (error) {
+      message.error(error.message || 'Failed to save invoice');
+    } finally {
+      setIsApiSaving(false);
+    }
+  };
+
   const handleSaveJSON = () => {
     const data = {
       ...formValues,
@@ -161,6 +196,14 @@ export default function Home() {
               />
               <MoonOutlined className={isDarkMode ? 'text-blue-400' : 'text-gray-400'} />
             </div>
+            {user ? (
+              <Space size="small">
+                <Text strong className="hidden md:inline">{user.name}</Text>
+                <Button icon={<LogoutOutlined />} onClick={logout} size="small" type="text" danger />
+              </Space>
+            ) : (
+              <Button icon={<UserOutlined />} size="small">Login</Button>
+            )}
           </Space>
         </Header>
 
@@ -213,9 +256,11 @@ export default function Home() {
                   template={template}
                   onDownloadPDF={handleDownloadPDF}
                   onSaveJSON={handleSaveJSON}
+                  onSaveToAccount={handleSaveToAccount}
                   onPrint={handlePrint}
                   isDarkMode={isDarkMode}
                   isSaving={isSaving}
+                  isApiSaving={isApiSaving}
                 />
 
                 <div className="sm:hidden mt-4">
