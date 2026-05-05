@@ -15,8 +15,8 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          const { data } = await authApi.getMe();
-          setUser(data);
+          const response = await authApi.getMe();
+          setUser(response.data); // Backend structure: { status: 'success', data: userObject }
         } catch (error) {
           console.error('Auth initialization failed:', error);
           localStorage.removeItem('token');
@@ -30,12 +30,20 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      const { data, token } = await authApi.login(credentials);
-      localStorage.setItem('token', token);
-      setUser(data);
+      const response = await authApi.login(credentials);
+      // Backend response structure: { status: 'success', data: { user, accessToken, refreshToken } }
+      const { user, accessToken } = response.data;
+      
+      if (!accessToken) {
+        throw new Error('Access token not found in response');
+      }
+
+      localStorage.setItem('token', accessToken);
+      setUser(user);
       message.success('Logged in successfully');
       return true;
     } catch (error) {
+      console.error('Login error:', error);
       message.error(error.message || 'Login failed');
       return false;
     }
@@ -43,12 +51,20 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const { data, token } = await authApi.register(userData);
-      localStorage.setItem('token', token);
-      setUser(data);
+      const response = await authApi.register(userData);
+      // Backend response structure: { status: 'success', data: { user, accessToken, refreshToken } }
+      const { user, accessToken } = response.data;
+
+      if (!accessToken) {
+        throw new Error('Access token not found in response');
+      }
+      
+      localStorage.setItem('token', accessToken);
+      setUser(user);
       message.success('Registered successfully');
       return true;
     } catch (error) {
+      console.error('Registration error:', error);
       message.error(error.message || 'Registration failed');
       return false;
     }

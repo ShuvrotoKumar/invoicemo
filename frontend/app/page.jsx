@@ -1,12 +1,15 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 import dayjs from 'dayjs';
 import { Form, Layout, Typography, Row, Col, Space, InputNumber, Card, ConfigProvider, theme, Switch, Button, Select, message } from 'antd';
-import { SunOutlined, MoonOutlined, DownloadOutlined, FileTextOutlined, SwapOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
+import { SunOutlined, MoonOutlined, DownloadOutlined, FileTextOutlined, SwapOutlined, UserOutlined, LogoutOutlined, HistoryOutlined } from '@ant-design/icons';
 import InvoiceForm from '@/components/InvoiceForm';
 import ItemTable from '@/components/ItemTable';
 import InvoicePreview from '@/components/InvoicePreview';
+import AuthModal from '@/components/AuthModal';
 import { calculateTotals } from '@/utils/calculateTotals';
 import { useAuth } from '@/context/AuthContext';
 import { invoiceApi } from '@/lib/api';
@@ -27,6 +30,7 @@ export default function Home() {
   const [template, setTemplate] = useState('modern');
   const [isSaving, setIsSaving] = useState(false);
   const [isApiSaving, setIsApiSaving] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [initialInvoiceNumber] = useState(() => `INV-${Math.floor(Math.random() * 9000) + 1000}`);
 
   const onValuesChange = useCallback((_, allValues) => {
@@ -105,7 +109,7 @@ export default function Home() {
   const handleSaveToAccount = async () => {
     if (!user) {
       message.info('Please log in to save invoices to your account');
-      // Here you could open a login modal
+      setIsAuthModalOpen(true);
       return;
     }
 
@@ -168,12 +172,10 @@ export default function Home() {
     >
       <Layout className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-slate-50'}`}>
         <Header className={`bg-white dark:bg-gray-800 border-b flex items-center justify-between px-4 md:px-8 h-16 sticky top-0 z-50 shadow-sm ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Text className="text-white font-bold">I</Text>
-            </div>
+          <Link href="/" className="flex items-center gap-2">
+            <Image src="/logo.png" alt="InvoiceMo Logo" width={32} height={32} className="rounded-lg" />
             <Title level={4} className="m-0 hidden sm:block">InvoiceMo</Title>
-          </div>
+          </Link>
           <Space size="middle" className="flex-wrap">
             <div className="hidden sm:flex items-center gap-2">
               <SwapOutlined />
@@ -198,14 +200,19 @@ export default function Home() {
             </div>
             {user ? (
               <Space size="small">
+                <Link href="/invoices">
+                  <Button icon={<HistoryOutlined />} size="small">My Invoices</Button>
+                </Link>
                 <Text strong className="hidden md:inline">{user.name}</Text>
                 <Button icon={<LogoutOutlined />} onClick={logout} size="small" type="text" danger />
               </Space>
             ) : (
-              <Button icon={<UserOutlined />} size="small">Login</Button>
+              <Button icon={<UserOutlined />} onClick={() => setIsAuthModalOpen(true)} size="small">Login</Button>
             )}
           </Space>
         </Header>
+
+        <AuthModal open={isAuthModalOpen} onCancel={() => setIsAuthModalOpen(false)} />
 
         <Content className="p-4 md:p-8 max-w-[1400px] mx-auto w-full">
           <div className="mb-4 md:mb-6">

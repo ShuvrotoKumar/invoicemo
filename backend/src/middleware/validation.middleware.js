@@ -3,12 +3,20 @@ const { z } = require('zod');
 const validate = (schema) => {
   return (req, res, next) => {
     try {
-      const source = req.method === 'GET' ? 'query' : 'body';
-      schema.parse(req[source]);
+      schema.parse({
+        body: req.body,
+        query: req.query,
+        params: req.params,
+      });
       next();
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const messages = error.errors.map((e) => `${e.path.join('.')}: ${e.message}`);
+        const messages = error.errors.map((e) => {
+          // Remove "body." prefix for cleaner messages
+          const path = e.path.join('.');
+          const cleanPath = path.startsWith('body.') ? path.replace('body.', '') : path;
+          return `${cleanPath}: ${e.message}`;
+        });
         return res.status(400).json({
           status: 'fail',
           message: 'Validation error',
@@ -24,7 +32,7 @@ const registerSchema = z.object({
   body: z.object({
     name: z.string().min(2).max(100),
     email: z.string().email(),
-    password: z.string().min(8).max(128),
+    password: z.string().min(6).max(128),
   }),
 });
 
@@ -38,7 +46,7 @@ const loginSchema = z.object({
 const invoiceSchema = z.object({
   body: z.object({
     companyName: z.string().min(1).max(200).optional(),
-    companyLogo: z.string().url().optional().or(z.literal('')),
+    companyLogo: z.string().optional().or(z.literal('')),
     companyAddress: z.string().max(500).optional(),
     companyEmail: z.string().email().optional().or(z.literal('')),
     companyPhone: z.string().max(50).optional(),

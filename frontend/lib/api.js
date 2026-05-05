@@ -34,7 +34,7 @@ export const authApi = {
     method: 'POST',
     body: JSON.stringify(userData),
   }),
-  getMe: () => apiRequest('/auth/me'),
+  getMe: () => apiRequest('/auth/profile'),
 };
 
 export const invoiceApi = {
