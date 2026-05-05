@@ -91,7 +91,7 @@ const AuthModal = ({ open, onCancel }) => {
       open={open}
       onCancel={onCancel}
       footer={null}
-      destroyOnClose
+      destroyOnHidden
     >
       <Tabs activeKey={activeTab} onChange={setActiveTab} items={items} />
     </Modal>

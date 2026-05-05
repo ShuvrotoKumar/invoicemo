@@ -11,7 +11,7 @@ import InvoicePreview from '@/components/InvoicePreview';
 import dayjs from 'dayjs';
 
 const { Content, Header } = Layout;
-const { Title, Text, Image } = Typography;
+const { Title, Text } = Typography;
 
 export default function InvoicesPage() {
   const { user, loading: authLoading } = useAuth();
@@ -194,7 +194,7 @@ export default function InvoicesPage() {
         footer={null}
         width={1000}
         centered
-        destroyOnClose
+        destroyOnHidden
       >
         {selectedInvoice && (
           <div className="py-4">
